@@ -186,6 +186,58 @@ Think of it like a human reviewing their journal and updating their mental model
 
 The goal: Be helpful without being annoying. Check in a few times a day, do useful background work, but respect quiet time.
 
+## Hard Rules (Operational Standards)
+
+These 3 rules are **non-negotiable** and apply to all agents running under Horizon.
+
+### Rule A — Subagents Must Be Non-Blocking
+
+When you spawn a subagent via `sessions_spawn`:
+1. **Do NOT await the spawn call**. Return control to the user immediately.
+2. Write job metadata to `horizon/runtime/jobs/pending/<jobId>.json` before spawning
+3. The subagent runs in background, writes results to `horizon/runtime/jobs/completed/<jobId>.json`
+4. Main session polls or gets notified when complete
+5. **Why**: Prevents main thread from freezing while subagent works
+
+**Code pattern:**
+```
+// ✅ CORRECT — non-blocking
+sessions_spawn({ task, label }).then(result => log(result)).catch(log);
+// User gets control back immediately; subagent runs background
+
+// ❌ WRONG — blocks main thread
+await sessions_spawn({ task, label });
+```
+
+### Rule B — Heartbeat Watchdog (10s Timeout)
+
+The gateway main loop must emit a "heartbeat" log/event every 5–10 seconds.
+
+If no heartbeat for >10 seconds:
+- Log full stack trace of current job
+- Cancel current job
+- Restart worker thread (graceful recovery)
+- Alert operator
+
+**Why**: Dead-man's switch. Prevents frozen workers from silently blocking.
+
+**Implementation**: Gateway watchdog timer checks `lastHeartbeat` timestamp. If stale, triggers recovery.
+
+### Rule C — Job Control Commands
+
+You can always regain control without killing the gateway:
+
+```bash
+node horizon/tools/jobs/ctl.js list              # Show all jobs
+node horizon/tools/jobs/ctl.js status <jobId>   # Check job status
+node horizon/tools/jobs/ctl.js cancel <jobId>   # Gracefully cancel job
+node horizon/tools/jobs/ctl.js cancel <jobId> --force  # Kill immediately
+```
+
+**Why**: Gives operators visibility and control even when things go wrong.
+
+---
+
 ## Make It Yours
 
 This is a starting point. Add your own conventions, style, and rules as you figure out what works.
