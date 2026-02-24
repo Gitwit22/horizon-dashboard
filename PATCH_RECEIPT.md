@@ -61,23 +61,6 @@ git checkout HEAD^ -- horizon/tools/jobs/ctl.js
 
 ---
 
-## 2026-02-24T01:25 — Remove DeepSeek from Routing
-
-**Issue:** Horizon routing strategy had DeepSeek as fallback, but you should never see it. Dataset should train Llama directly on Haiku escalations.
-
-**Fix:**
-- Updated MEMORY.md: Model strategy now Haiku (primary) → Llama (fallback)
-- Removed DeepSeek from all routing decisions
-- Updated dataset schema: `chosen_model` now `"haiku|llama"` only
-- Removed "heavy thinking" logic that escalated to DeepSeek
-- Updated BUDGET_GUARD.md: Llama is fallback, not DeepSeek
-
-**Why:** Every Haiku escalation tagged in dataset trains Llama on that decision pattern. Eventually Llama replaces Haiku for those cases, learning from real routing choices.
-
-**Result:** User never sees tool/model selection. Llama learns routing from data.
-
----
-
 ## 2026-02-24T01:12 — Workspace Boundary Hard Rule
 
 **Issue:** Horizon (me) created C:\Users\klaws\nxtlvl-mejay scaffold repo instead of using C:\Users\klaws\clawd\projects\mejay (real source of truth). This violates workspace safety.
