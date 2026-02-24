@@ -188,7 +188,21 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 
 ## Hard Rules (Operational Standards)
 
-These 3 rules are **non-negotiable** and apply to all agents running under Horizon.
+These rules are **non-negotiable** and apply to all agents running under Horizon.
+
+### Rule 0 — Workspace Boundary
+
+**Never create repos or projects outside C:\Users\klaws\clawd\projects\<repo>**
+
+All work happens in the approved workspace:
+- ✅ C:\Users\klaws\clawd\projects\mejay (real MeJay code)
+- ✅ C:\Users\klaws\clawd\projects\streamline (real StreamLine code)
+- ❌ C:\Users\klaws\nxtlvl-mejay (external scaffold — forbidden)
+- ❌ C:\Users\klaws\anything-else (outside workspace — forbidden)
+
+**Exception:** Only if you receive explicit instruction: "Create a new project at [path]"
+
+**Why:** Single source of truth, no duplicate scaffolds, clean recovery after crashes.
 
 ### Rule A — Subagents Must Be Non-Blocking
 

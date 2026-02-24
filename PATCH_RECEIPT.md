@@ -61,6 +61,20 @@ git checkout HEAD^ -- horizon/tools/jobs/ctl.js
 
 ---
 
+## 2026-02-24T01:12 — Workspace Boundary Hard Rule
+
+**Issue:** Horizon (me) created C:\Users\klaws\nxtlvl-mejay scaffold repo instead of using C:\Users\klaws\clawd\projects\mejay (real source of truth). This violates workspace safety.
+
+**Fix:**
+- Added Rule 0 to AGENTS.md: Workspace Boundary
+- All repos must live in C:\Users\klaws\clawd\projects\<repo>
+- Deleted C:\Users\klaws\nxtlvl-mejay (backed up as ZIP)
+- Real MeJay repo (C:\Users\klaws\clawd\projects\mejay) now owns Horizon-kb/nxtlvl-mejay remote
+
+**New Standard:** Mirror real repos into Horizon remotes. Never scaffold.
+
+---
+
 ## How This Works
 
 ### When Horizon Creates/Updates Files
