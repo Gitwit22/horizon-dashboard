@@ -49,12 +49,14 @@ git checkout HEAD^ -- horizon/tools/jobs/ctl.js
 ```
 
 **proof:**
-- Commit hash: `(pending git commit)`
+- Commit hashes: 
+  - `6514f66` — Standards docs (AGENTS.md, STANDARDS.md, QUICK_REFERENCE.md, PATCH_RECEIPT.md)
+  - `9e55098` — Horizon tools (llm-attribution.js, job control CLI, job schema)
 - Verify with:
   ```bash
-  git log --oneline -1
-  git show --name-only <hash>
-  git diff <hash>^ <hash> -- horizon/tools/report/llm-attribution.js
+  git show --stat 6514f66
+  git show --stat 9e55098
+  git diff 6514f66^..9e55098 -- horizon/tools/
   ```
 
 ---
