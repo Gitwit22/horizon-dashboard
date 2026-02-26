@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horizon Console</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      background: #0a0e27;
+      color: #e0e0e0;
+      padding: 2rem;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .subtitle { color: #888; margin-bottom: 2rem; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .card {
+      background: #141829;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      border-left: 3px solid #ff9500;
+    }
+    .card-label { font-size: 0.75rem; color: #888; margin-bottom: 0.5rem; letter-spacing: 0.05em; }
+    .card-value { font-size: 2rem; font-weight: bold; }
+    .runs-table { background: #141829; padding: 1.5rem; border-radius: 0.5rem; }
+    .runs-table h2 { margin-bottom: 1rem; font-size: 0.9rem; letter-spacing: 0.05em; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: rgba(0,0,0,0.2); }
+    th { padding: 1rem; text-align: left; color: #888; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.05em; }
+    td { padding: 1rem; border-bottom: 1px solid #2a2f45; }
+    .status-success { background: rgba(74,222,128,0.2); color: #4ade80; padding: 0.35rem 0.75rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; }
+    .status-error { background: rgba(255,87,87,0.2); color: #ff5757; padding: 0.35rem 0.75rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; }
+    .status-running { background: rgba(255,149,0,0.2); color: #ff9500; padding: 0.35rem 0.75rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; }
+    .status-queued { background: rgba(191,191,191,0.2); color: #999; padding: 0.35rem 0.75rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌅 Horizon Console</h1>
+    <p class="subtitle">Monitor runs, debug steps, track performance.</p>
+    
+    <div class="grid" id="heartbeat">
+      <div class="card">
+        <div class="card-label">⏱️ LAST EVENT</div>
+        <div class="card-value" id="lastEvent">30s ago</div>
+      </div>
+      <div class="card">
+        <div class="card-label">📊 QUEUE SIZE</div>
+        <div class="card-value" id="queueSize">3</div>
+      </div>
+      <div class="card">
+        <div class="card-label">▶️ ACTIVE RUNS</div>
+        <div class="card-value" id="activeRuns">1</div>
+      </div>
+      <div class="card">
+        <div class="card-label">📈 RUNS TODAY</div>
+        <div class="card-value" id="runsToday">47</div>
+      </div>
+    </div>
+
+    <div class="runs-table">
+      <h2>RUNS (Last 6)</h2>
+      <table id="runsTable">
+        <thead>
+          <tr>
+            <th>STATUS</th>
+            <th>RUN ID</th>
+            <th>STARTED</th>
+            <th>DURATION</th>
+            <th>AGENT</th>
+            <th>TOKENS</th>
+          </tr>
+        </thead>
+        <tbody id="runsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const getStatusClass = (status) => {
+      const map = { 'Success': 'status-success', 'Error': 'status-error', 'Running': 'status-running', 'Queued': 'status-queued' };
+      return map[status] || '';
+    };
+
+    fetch('/api/heartbeat').then(r => r.json()).then(data => {
+      document.getElementById('lastEvent').textContent = '30s ago';
+      document.getElementById('queueSize').textContent = data.queueSize;
+      document.getElementById('activeRuns').textContent = data.activeRuns;
+      document.getElementById('runsToday').textContent = data.runsToday;
+    });
+
+    fetch('/api/runs').then(r => r.json()).then(data => {
+      const body = document.getElementById('runsBody');
+      data.runs.forEach(run => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><span class="${getStatusClass(run.status)}">${run.status}</span></td>
+          <td>${run.id}</td>
+          <td>${run.started}</td>
+          <td>${run.duration || '—'}</td>
+          <td>${run.agent}</td>
+          <td>${run.tokens}</td>
+        `;
+        body.appendChild(row);
+      });
+    });
+  </script>
+</body>
+</html>
