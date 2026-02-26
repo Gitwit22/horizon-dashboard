@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 4%;
+    --foreground: 220 10% 85%;
+
+    --card: 0 0% 7%;
+    --card-foreground: 220 10% 85%;
+
+    --popover: 0 0% 9%;
+    --popover-foreground: 220 10% 85%;
+
+    --primary: 30 100% 50%;
+    --primary-foreground: 0 0% 2%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 220 10% 85%;
+
+    --muted: 0 0% 14%;
+    --muted-foreground: 220 5% 50%;
+
+    --accent: 25 95% 45%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 142 72% 42%;
+    --success-foreground: 0 0% 2%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 2%;
+
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 30 100% 50%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 220 10% 75%;
+    --sidebar-primary: 30 100% 50%;
+    --sidebar-primary-foreground: 0 0% 2%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 220 10% 85%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-ring: 30 100% 50%;
+
+    --glow-orange: 0 0% 0% / 0;
+    --shadow-fire: 0 8px 32px -4px hsl(30 100% 50% / 0.15);
+    --shadow-card: 0 4px 24px -2px hsl(0 0% 0% / 0.5);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer utilities {
+  .glow-orange {
+    box-shadow: 0 0 20px hsl(30 100% 50% / 0.2), 0 0 60px hsl(30 100% 50% / 0.1);
+  }
+
+  .glow-orange-sm {
+    box-shadow: 0 0 8px hsl(30 100% 50% / 0.3);
+  }
+
+  .text-gradient-fire {
+    background: linear-gradient(135deg, hsl(30 100% 55%), hsl(20 100% 50%), hsl(35 100% 60%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .border-glow {
+    border-color: hsl(30 100% 50% / 0.3);
+  }
+
+  .bg-grid {
+    background-image: 
+      linear-gradient(hsl(0 0% 100% / 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(0 0% 100% / 0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}
