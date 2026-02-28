@@ -9,6 +9,8 @@ import { CostBreakdown } from "@/components/CostBreakdown";
 import { AlertCustomization } from "@/components/AlertCustomization";
 import { MemoryStatus } from "@/components/MemoryStatus";
 import { SubagentQueue } from "@/components/SubagentQueue";
+import { ChatPanel } from "@/components/ChatPanel";
+import { DocumentUploadPanel } from "@/components/DocumentUploadPanel";
 import { Run } from "@/data/mockRuns";
 
 const Index = () => {
@@ -25,6 +27,7 @@ const Index = () => {
             <p className="text-sm text-muted-foreground mt-1">
               {activeTab === "overview" && "Projects, skills, costs, and memory at a glance."}
               {activeTab === "runs" && "Monitor runs, debug steps, track performance."}
+              {activeTab === "chat" && "Chat with Horizon and upload supporting documents."}
               {activeTab === "heartbeat" && "Live system health and alerts."}
               {activeTab === "settings" && "Configure alerts and thresholds."}
             </p>
@@ -46,6 +49,15 @@ const Index = () => {
 
           {activeTab === "runs" && (
             <RunsTable onSelectRun={setSelectedRun} />
+          )}
+
+          {activeTab === "chat" && (
+            <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+              <div className="h-[70vh] min-h-[28rem]">
+                <ChatPanel />
+              </div>
+              <DocumentUploadPanel />
+            </div>
           )}
 
           {activeTab === "heartbeat" && (

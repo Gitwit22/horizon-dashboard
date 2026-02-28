@@ -43,6 +43,15 @@ export interface CostBreakdown {
   breakdown: Array<{ label: string; amount: number }>
 }
 
+export interface UploadedDocument {
+  id: string
+  name: string
+  size: number
+  type: string
+  uploadedAt: string
+  status: 'uploaded' | 'processing' | 'failed'
+}
+
 // Fetch heartbeat data
 export async function fetchHeartbeat(): Promise<Heartbeat> {
   try {
@@ -111,6 +120,31 @@ export async function fetchCostBreakdown(): Promise<CostBreakdown[]> {
   } catch (error) {
     console.error('Costs fetch error:', error)
     return []
+  }
+}
+
+export async function uploadDocument(file: File): Promise<UploadedDocument> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(`${GATEWAY_URL}/api/documents/upload`, {
+    method: 'POST',
+    body: formData
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to upload document')
+  }
+
+  const data = await response.json()
+
+  return {
+    id: data.id || `doc_${Date.now()}`,
+    name: data.name || file.name,
+    size: data.size || file.size,
+    type: data.type || file.type || 'application/octet-stream',
+    uploadedAt: data.uploadedAt || new Date().toISOString(),
+    status: data.status || 'uploaded'
   }
 }
 

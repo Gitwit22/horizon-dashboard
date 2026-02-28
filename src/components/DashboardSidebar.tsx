@@ -1,9 +1,10 @@
 import logo from "@/assets/logo.png";
-import { Activity, List, LayoutDashboard, Settings } from "lucide-react";
+import { Activity, List, LayoutDashboard, MessageSquare, Settings } from "lucide-react";
 
 const items = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "runs", label: "Runs", icon: List },
+  { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "heartbeat", label: "Heartbeat", icon: Activity },
   { id: "settings", label: "Settings", icon: Settings },
 ];

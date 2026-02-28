@@ -7,10 +7,16 @@ export interface Message {
   timestamp: Date
 }
 
+interface MessageMetadata {
+  documentId?: string
+  documentName?: string
+  action?: string
+}
+
 interface ChatContextType {
   messages: Message[]
   addMessage: (sender: 'user' | 'horizon', text: string) => void
-  sendMessage: (text: string) => Promise<void>
+  sendMessage: (text: string, metadata?: MessageMetadata) => Promise<void>
   clearChat: () => void
   isConnected: boolean
 }
@@ -77,7 +83,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setMessages(prev => [...prev, newMessage])
   }, [])
 
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback(async (text: string, metadata?: MessageMetadata) => {
     // Add user message to UI
     addMessage('user', text)
     
@@ -86,6 +92,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       wsRef.current.send(JSON.stringify({
         type: 'message',
         text,
+        metadata,
         timestamp: new Date()
       }))
     } else {
@@ -95,7 +102,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const response = await fetch(`${gatewayUrl}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text })
+          body: JSON.stringify({ message: text, metadata })
         })
         
         if (response.ok) {
