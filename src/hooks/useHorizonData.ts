@@ -225,12 +225,12 @@ export function useAlerts(pollMs = 30_000) {
   const fetcher = useCallback(async () => {
     const raw = await apiFetchAlerts();
     if (!Array.isArray(raw)) return [];
-    return raw.map((a): AlertRule => ({
-      id: a.id ?? "",
-      label: a.label ?? a.name ?? "",
-      threshold: a.threshold ?? "",
-      active: a.active ?? true,
-      triggered: a.triggered ?? false,
+    return raw.map((a: Record<string, unknown>): AlertRule => ({
+      id: (a.id as AlertRule["id"]) ?? "",
+      label: (a.label as string) ?? (a.name as string) ?? "",
+      threshold: (a.threshold as string) ?? "",
+      active: (a.active as boolean) ?? true,
+      triggered: (a.triggered as boolean) ?? false,
     }));
   }, []);
   return usePolling<AlertRule[]>(fetcher, pollMs);
