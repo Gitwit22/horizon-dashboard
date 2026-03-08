@@ -1,9 +1,10 @@
+import type React from "react";
 import type { Run, RunStep, StepType } from "@/types/horizon";
 import { StatusBadge } from "./StatusBadge";
 import { X, ChevronDown, ChevronRight, Brain, Wrench, Sparkles, AlertTriangle, Copy, Check } from "lucide-react";
 import { useState } from "react";
 
-const stepIcons: Record<StepType, any> = {
+const stepIcons: Record<StepType, React.ElementType> = {
   llm_call: Brain,
   tool_call: Wrench,
   skill_call: Sparkles,

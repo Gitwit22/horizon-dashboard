@@ -59,7 +59,7 @@ function createMenu() {
         {
           label: 'Toggle Dev Tools',
           accelerator: 'CmdOrCtrl+Shift+I',
-          click: () => mainWindow?.webDevTools.toggleDevTools()
+          click: () => mainWindow?.webContents.toggleDevTools()
         }
       ]
     }

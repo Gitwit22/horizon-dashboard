@@ -1,8 +1,9 @@
+import type React from "react";
 import { Brain, RefreshCw, Clock } from "lucide-react";
 import { useMemoryStatus } from "@/hooks/useHorizonData";
 import { LoadingState, EmptyState } from "@/components/DataStates";
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, React.ElementType> = {
   brain: Brain,
   refresh: RefreshCw,
   clock: Clock,

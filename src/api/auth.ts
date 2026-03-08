@@ -7,6 +7,13 @@ const GATEWAY_URL: string =
   import.meta.env.VITE_GATEWAY_URL ??
   (import.meta.env.DEV ? "" : "http://10.0.0.194:3001");
 
+if (!import.meta.env.DEV && !import.meta.env.VITE_GATEWAY_URL) {
+  console.warn(
+    "[auth] VITE_GATEWAY_URL is not set — falling back to hardcoded internal IP. " +
+    "Set VITE_GATEWAY_URL in your .env for production deployments.",
+  );
+}
+
 const USER_ID = import.meta.env.VITE_USER_ID || "console-user";
 const WORKSPACE_ID = import.meta.env.VITE_WORKSPACE_ID || "";
 const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN || "";

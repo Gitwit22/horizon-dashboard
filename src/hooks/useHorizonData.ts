@@ -11,8 +11,10 @@ import {
 import type {
   HeartbeatData,
   Run,
+  RunStep,
   RunStatus,
   ProjectItem,
+  ProjectTask,
   SkillStat,
   CostProject,
   SubagentJob,
@@ -49,9 +51,9 @@ function usePolling<T>(
         setError(null);
         setLoading(false);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (mountedRef.current) {
-        setError(err?.message ?? "Fetch failed");
+        setError(err instanceof Error ? err.message : "Fetch failed");
         setLoading(false);
       }
     }
@@ -92,82 +94,84 @@ function parseDuration(dur: string): number | null {
   return null;
 }
 
-function normalizeRun(raw: any): Run {
+function normalizeRun(raw: Record<string, unknown>): Run {
+  const rawSteps = raw.steps;
+  const rawDuration = raw.duration;
   return {
-    id: raw.id ?? raw.runId ?? "",
-    status: normalizeStatus(raw.status),
-    startedAt: raw.startedAt ?? raw.started ?? new Date().toISOString(),
-    finishedAt: raw.finishedAt ?? raw.finished ?? null,
+    id: (raw.id as string) ?? (raw.runId as string) ?? "",
+    status: normalizeStatus(raw.status as string),
+    startedAt: (raw.startedAt as string) ?? (raw.started as string) ?? new Date().toISOString(),
+    finishedAt: (raw.finishedAt as string) ?? (raw.finished as string) ?? null,
     durationMs:
-      raw.durationMs ?? (typeof raw.duration === "string" ? parseDuration(raw.duration) : raw.duration ?? null),
-    channel: raw.channel ?? "api",
-    userId: raw.userId ?? raw.user ?? "",
-    agent: raw.agent ?? "horizon-main",
-    lane: raw.lane ?? "general",
-    stepsCount: raw.stepsCount ?? raw.steps?.length ?? 0,
-    tokensUsed: raw.tokensUsed ?? raw.tokens ?? 0,
-    cost: raw.cost ?? 0,
-    error: raw.error ?? null,
-    steps: Array.isArray(raw.steps) ? raw.steps : [],
+      (raw.durationMs as number) ?? (typeof rawDuration === "string" ? parseDuration(rawDuration) : (rawDuration as number) ?? null),
+    channel: (raw.channel as string) ?? "api",
+    userId: (raw.userId as string) ?? (raw.user as string) ?? "",
+    agent: (raw.agent as string) ?? "horizon-main",
+    lane: (raw.lane as string) ?? "general",
+    stepsCount: (raw.stepsCount as number) ?? (Array.isArray(rawSteps) ? rawSteps.length : 0),
+    tokensUsed: (raw.tokensUsed as number) ?? (raw.tokens as number) ?? 0,
+    cost: (raw.cost as number) ?? 0,
+    error: (raw.error as string) ?? null,
+    steps: Array.isArray(rawSteps) ? (rawSteps as RunStep[]) : [],
   };
 }
 
-function normalizeHeartbeat(raw: any): HeartbeatData {
+function normalizeHeartbeat(raw: Record<string, unknown>): HeartbeatData {
   return {
     lastEventReceived:
-      raw.lastEventReceived ??
-      (raw.lastEvent instanceof Date ? raw.lastEvent.toISOString() : raw.lastEvent) ??
+      (raw.lastEventReceived as string) ??
+      (raw.lastEvent instanceof Date ? raw.lastEvent.toISOString() : (raw.lastEvent as string)) ??
       new Date().toISOString(),
     lastSuccessfulRun:
-      raw.lastSuccessfulRun ??
-      (raw.lastSuccess instanceof Date ? raw.lastSuccess.toISOString() : raw.lastSuccess) ??
+      (raw.lastSuccessfulRun as string) ??
+      (raw.lastSuccess instanceof Date ? raw.lastSuccess.toISOString() : (raw.lastSuccess as string)) ??
       new Date().toISOString(),
-    currentQueueSize: raw.currentQueueSize ?? raw.queueSize ?? 0,
-    activeRuns: raw.activeRuns ?? 0,
-    stuckThresholdSeconds: raw.stuckThresholdSeconds ?? raw.stuckThreshold ?? 120,
+    currentQueueSize: (raw.currentQueueSize as number) ?? (raw.queueSize as number) ?? 0,
+    activeRuns: (raw.activeRuns as number) ?? 0,
+    stuckThresholdSeconds: (raw.stuckThresholdSeconds as number) ?? (raw.stuckThreshold as number) ?? 120,
     avgResponseTimeMs:
-      raw.avgResponseTimeMs ?? (raw.avgResponse != null ? raw.avgResponse * 1000 : 0),
-    totalRunsToday: raw.totalRunsToday ?? raw.runsToday ?? 0,
+      (raw.avgResponseTimeMs as number) ?? (raw.avgResponse != null ? (raw.avgResponse as number) * 1000 : 0),
+    totalRunsToday: (raw.totalRunsToday as number) ?? (raw.runsToday as number) ?? 0,
     errorRatePercent:
-      raw.errorRatePercent ?? (raw.errorRate != null ? raw.errorRate * 100 : 0),
+      (raw.errorRatePercent as number) ?? (raw.errorRate != null ? (raw.errorRate as number) * 100 : 0),
   };
 }
 
-function normalizeProjects(raw: any[]): ProjectItem[] {
+function normalizeProjects(raw: Record<string, unknown>[]): ProjectItem[] {
   if (!Array.isArray(raw)) return [];
   return raw.map((p) => ({
-    name: p.name ?? "Unknown",
+    name: (p.name as string) ?? "Unknown",
     tasks: Array.isArray(p.tasks)
-      ? p.tasks
+      ? (p.tasks as ProjectTask[])
       : Array.isArray(p.metrics)
-        ? p.metrics.map((m: any) => ({
-            label: m.label ?? "",
-            value: m.value ?? "",
-            status: m.status ?? (p.status === "warning" ? "warning" : "ok"),
+        ? (p.metrics as Record<string, unknown>[]).map((m) => ({
+            label: (m.label as string) ?? "",
+            value: (m.value as string) ?? "",
+            status: (m.status as ProjectTask["status"]) ?? ((p.status as string) === "warning" ? "warning" : "ok"),
           }))
         : [],
   }));
 }
 
-function normalizeSkills(raw: any[]): SkillStat[] {
+function normalizeSkills(raw: Record<string, unknown>[]): SkillStat[] {
   if (!Array.isArray(raw)) return [];
   return raw.map((s) => ({
-    name: s.name ?? "",
-    runs: s.runs ?? s.completed ?? 0,
-    status: s.status ?? "active",
+    name: (s.name as string) ?? "",
+    runs: (s.runs as number) ?? (s.completed as number) ?? 0,
+    status: (s.status as SkillStat["status"]) ?? "active",
   }));
 }
 
-function normalizeCosts(raw: any[]): CostProject[] {
+function normalizeCosts(raw: Record<string, unknown>[]): CostProject[] {
   if (!Array.isArray(raw)) return [];
   return raw.map((c) => ({
-    name: c.name ?? c.project ?? "Unknown",
-    total: c.total ?? c.cost ?? 0,
+    name: (c.name as string) ?? (c.project as string) ?? "Unknown",
+    total: (c.total as number) ?? (c.cost as number) ?? 0,
     breakdown: Array.isArray(c.breakdown)
-      ? c.breakdown.map((b: any) => ({
-          provider: b.provider ?? b.label ?? "",
-          cost: b.cost ?? b.amount ?? 0,
-          label: b.label,
+      ? (c.breakdown as Record<string, unknown>[]).map((b) => ({
+          provider: (b.provider as string) ?? (b.label as string) ?? "",
+          cost: (b.cost as number) ?? (b.amount as number) ?? 0,
+          label: b.label as string | undefined,
         }))
       : [],
   }));
@@ -221,7 +225,7 @@ export function useAlerts(pollMs = 30_000) {
   const fetcher = useCallback(async () => {
     const raw = await apiFetchAlerts();
     if (!Array.isArray(raw)) return [];
-    return raw.map((a: any): AlertRule => ({
+    return raw.map((a): AlertRule => ({
       id: a.id ?? "",
       label: a.label ?? a.name ?? "",
       threshold: a.threshold ?? "",
@@ -241,11 +245,11 @@ export function useSubagentQueue(pollMs = 10_000) {
       if (!res.ok) return [];
       const data = await res.json();
       const list = Array.isArray(data) ? data : data.jobs ?? [];
-      return list.map((j: any) => ({
-        id: j.id ?? "",
-        task: j.task ?? j.name ?? "",
-        status: normalizeStatus(j.status),
-        eta: j.eta ?? "—",
+      return list.map((j: Record<string, unknown>) => ({
+        id: (j.id as string) ?? "",
+        task: (j.task as string) ?? (j.name as string) ?? "",
+        status: normalizeStatus(j.status as string),
+        eta: (j.eta as string) ?? "—",
       }));
     } catch {
       return [];
@@ -263,10 +267,10 @@ export function useMemoryStatus(pollMs = 30_000) {
       if (!res.ok) return [];
       const data = await res.json();
       const list = Array.isArray(data) ? data : data.items ?? [];
-      return list.map((m: any) => ({
-        label: m.label ?? m.name ?? "",
-        value: m.value ?? "",
-        fresh: m.fresh ?? m.status === "fresh",
+      return list.map((m: Record<string, unknown>) => ({
+        label: (m.label as string) ?? (m.name as string) ?? "",
+        value: (m.value as string) ?? "",
+        fresh: (m.fresh as boolean) ?? m.status === "fresh",
       }));
     } catch {
       return [];

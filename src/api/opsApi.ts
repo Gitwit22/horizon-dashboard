@@ -11,7 +11,7 @@ export function isHighRiskAction(action: string): action is OpsAction {
   return HIGH_RISK_ACTIONS.includes(action as OpsAction);
 }
 
-async function readJsonSafe(response: Response): Promise<any> {
+async function readJsonSafe(response: Response): Promise<Record<string, unknown> | null> {
   try {
     return await response.json();
   } catch {

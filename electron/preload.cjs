@@ -1,7 +1,7 @@
-const { contextBridge, ipcMain } = require('electron')
+const { contextBridge, ipcRenderer } = require('electron')
 
 // Expose safe APIs to React app
 contextBridge.exposeInMainWorld('electron', {
-  getAppVersion: () => ipcMain.invoke('get-app-version'),
-  getAppName: () => ipcMain.invoke('get-app-name')
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  getAppName: () => ipcRenderer.invoke('get-app-name')
 })
