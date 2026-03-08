@@ -1,3 +1,4 @@
+import type React from "react";
 import { useState, useMemo } from "react";
 import { useRuns } from "@/hooks/useHorizonData";
 import type { Run, RunStatus } from "@/types/horizon";
@@ -30,7 +31,7 @@ function shortId(id: string) {
   return id.slice(0, 8) + "…" + id.slice(-6);
 }
 
-const STATUS_OPTIONS: { value: RunStatus | "all"; label: string; icon: any }[] = [
+const STATUS_OPTIONS: { value: RunStatus | "all"; label: string; icon: React.ElementType }[] = [
   { value: "all",     label: "All",     icon: Filter },
   { value: "running", label: "Running", icon: Loader2 },
   { value: "success", label: "Success", icon: CheckCircle2 },

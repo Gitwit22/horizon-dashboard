@@ -229,10 +229,7 @@ export function openEventStream(
     if (lastEventId) params.set("lastEventId", lastEventId);
     const url = `${GATEWAY_URL}/api/events?${params}`;
 
-    console.group("%c[SSE] Connecting", "color:#0ea5e9;font-weight:bold");
-    console.log("URL:", url);
-    console.log("Headers:", getAuthHeaders({ Accept: "text/event-stream" }));
-    console.groupEnd();
+    console.log("%c[SSE] Connecting to %s", "color:#0ea5e9;font-weight:bold", url);
 
     try {
       const res = await fetch(url, {

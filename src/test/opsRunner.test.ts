@@ -10,7 +10,7 @@ import { promises as fs } from "node:fs";
 const spawnMock = vi.fn();
 
 vi.mock("node:child_process", () => ({
-  spawn: (...args: any[]) => spawnMock(...args),
+  spawn: (...args: unknown[]) => spawnMock(...args),
 }));
 
 function buildSignature(secret: string, timestamp: number, body: string) {
@@ -19,7 +19,7 @@ function buildSignature(secret: string, timestamp: number, body: string) {
 
 function mockSpawnWithExit(exitCode: number) {
   spawnMock.mockImplementation(() => {
-    const child = new EventEmitter() as any;
+    const child = new EventEmitter() as EventEmitter & { on: EventEmitter["on"] };
     process.nextTick(() => {
       child.emit("close", exitCode);
     });
@@ -29,7 +29,7 @@ function mockSpawnWithExit(exitCode: number) {
 
 function mockSpawnWithError(message = "spawn failure") {
   spawnMock.mockImplementation(() => {
-    const child = new EventEmitter() as any;
+    const child = new EventEmitter() as EventEmitter & { on: EventEmitter["on"] };
     process.nextTick(() => {
       child.emit("error", new Error(message));
     });
@@ -56,7 +56,7 @@ async function createServerHarness(configOverrides: Record<string, unknown> = {}
     ...configOverrides,
   };
 
-  const { server } = createRunnerServer(config as any);
+  const { server } = createRunnerServer(config as Record<string, unknown>);
 
   await new Promise<void>((resolve) => {
     server.listen(0, "127.0.0.1", () => resolve());

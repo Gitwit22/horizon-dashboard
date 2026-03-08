@@ -1,3 +1,4 @@
+import type React from "react";
 import { useHeartbeat } from "@/hooks/useHorizonData";
 import { LoadingState, EmptyState } from "@/components/DataStates";
 import { Activity, Clock, AlertTriangle, Zap, BarChart3, CheckCircle } from "lucide-react";
@@ -10,7 +11,7 @@ function timeSince(isoString: string) {
 }
 
 function MetricCard({ icon: Icon, label, value, accent = false, warning = false }: {
-  icon: any; label: string; value: string | number; accent?: boolean; warning?: boolean;
+  icon: React.ElementType; label: string; value: string | number; accent?: boolean; warning?: boolean;
 }) {
   return (
     <div className={`rounded-lg border p-4 ${warning ? 'border-destructive/30 bg-destructive/5' : accent ? 'border-primary/20 bg-primary/5' : 'border-border bg-card'}`}>
