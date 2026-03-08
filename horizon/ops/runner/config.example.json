@@ -1,0 +1,16 @@
+{
+  "port": 8787,
+  "bindHost": "127.0.0.1",
+  "secretEnvVar": "OPS_SECRET",
+  "scriptsRoot": "C:\\NxtLvl\\ops",
+  "allowedActions": {
+    "start-horizon": "start-horizon.ps1",
+    "restart-horizon": "restart-horizon.ps1",
+    "reconnect-gateway": "reconnect-gateway.ps1",
+    "open-logs": "open-logs.ps1"
+  },
+  "ipAllowlist": [
+    "127.0.0.1",
+    "10.0.0.0/24"
+  ]
+}

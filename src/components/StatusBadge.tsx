@@ -1,4 +1,4 @@
-import { RunStatus } from "@/data/mockRuns";
+import type { RunStatus } from "@/types/horizon";
 
 const statusConfig: Record<RunStatus, { label: string; className: string }> = {
   queued: {

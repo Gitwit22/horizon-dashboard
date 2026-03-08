@@ -1,6 +1,10 @@
 // API service for connecting to Horizon Agent on Computer B (10.0.0.194)
 
-const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://10.0.0.194:3001'
+import { getAuthHeaders, getGatewayUrl } from "@/api/auth";
+
+const GATEWAY_URL = getGatewayUrl();
+
+const MAX_UPLOAD_MB = Number(import.meta.env.VITE_MAX_UPLOAD_MB || 25);
 
 export interface Heartbeat {
   lastEvent: Date
@@ -54,30 +58,19 @@ export interface UploadedDocument {
 
 // Fetch heartbeat data
 export async function fetchHeartbeat(): Promise<Heartbeat> {
-  try {
-    const response = await fetch(`${GATEWAY_URL}/api/heartbeat`)
-    if (!response.ok) throw new Error('Failed to fetch heartbeat')
-    return await response.json()
-  } catch (error) {
-    console.error('Heartbeat fetch error:', error)
-    // Return mock data as fallback
-    return {
-      lastEvent: new Date(),
-      lastSuccess: new Date(Date.now() - 11 * 60 * 1000),
-      queueSize: 3,
-      activeRuns: 1,
-      avgResponse: 4.3,
-      runsToday: 47,
-      errorRate: 0.042,
-      stuckThreshold: 120
-    }
-  }
+  const response = await fetch(`${GATEWAY_URL}/api/heartbeat`, {
+    headers: getAuthHeaders(),
+  })
+  if (!response.ok) throw new Error('Failed to fetch heartbeat')
+  return await response.json()
 }
 
 // Fetch runs
 export async function fetchRuns(): Promise<Run[]> {
   try {
-    const response = await fetch(`${GATEWAY_URL}/api/runs`)
+    const response = await fetch(`${GATEWAY_URL}/api/runs`, {
+      headers: getAuthHeaders(),
+    })
     if (!response.ok) throw new Error('Failed to fetch runs')
     const data = await response.json()
     return data.runs || []
@@ -90,7 +83,9 @@ export async function fetchRuns(): Promise<Run[]> {
 // Fetch project statuses
 export async function fetchProjectStatus(): Promise<ProjectStatus[]> {
   try {
-    const response = await fetch(`${GATEWAY_URL}/api/projects`)
+    const response = await fetch(`${GATEWAY_URL}/api/projects`, {
+      headers: getAuthHeaders(),
+    })
     if (!response.ok) throw new Error('Failed to fetch projects')
     return await response.json()
   } catch (error) {
@@ -102,7 +97,9 @@ export async function fetchProjectStatus(): Promise<ProjectStatus[]> {
 // Fetch skill execution stats
 export async function fetchSkillStats(): Promise<SkillExecution[]> {
   try {
-    const response = await fetch(`${GATEWAY_URL}/api/skills`)
+    const response = await fetch(`${GATEWAY_URL}/api/skills`, {
+      headers: getAuthHeaders(),
+    })
     if (!response.ok) throw new Error('Failed to fetch skills')
     return await response.json()
   } catch (error) {
@@ -114,7 +111,9 @@ export async function fetchSkillStats(): Promise<SkillExecution[]> {
 // Fetch cost breakdown
 export async function fetchCostBreakdown(): Promise<CostBreakdown[]> {
   try {
-    const response = await fetch(`${GATEWAY_URL}/api/costs`)
+    const response = await fetch(`${GATEWAY_URL}/api/costs`, {
+      headers: getAuthHeaders(),
+    })
     if (!response.ok) throw new Error('Failed to fetch costs')
     return await response.json()
   } catch (error) {
@@ -123,17 +122,48 @@ export async function fetchCostBreakdown(): Promise<CostBreakdown[]> {
   }
 }
 
+export interface AlertRule {
+  id: string | number
+  label: string
+  threshold: string
+  active: boolean
+  triggered: boolean
+}
+
+// Fetch alert rules
+export async function fetchAlerts(): Promise<AlertRule[]> {
+  try {
+    const response = await fetch(`${GATEWAY_URL}/api/alerts`, {
+      headers: getAuthHeaders(),
+    })
+    if (!response.ok) throw new Error('Failed to fetch alerts')
+    return await response.json()
+  } catch (error) {
+    console.error('Alerts fetch error:', error)
+    return []
+  }
+}
+
 export async function uploadDocument(file: File): Promise<UploadedDocument> {
+  if (Number.isFinite(MAX_UPLOAD_MB) && MAX_UPLOAD_MB > 0) {
+    const maxBytes = MAX_UPLOAD_MB * 1024 * 1024
+    if (file.size > maxBytes) {
+      throw new Error(`File too large (max ${MAX_UPLOAD_MB}MB)`)
+    }
+  }
+
   const formData = new FormData()
   formData.append('file', file)
 
   const response = await fetch(`${GATEWAY_URL}/api/documents/upload`, {
     method: 'POST',
-    body: formData
+    headers: getAuthHeaders(),
+    body: formData,
   })
 
   if (!response.ok) {
-    throw new Error('Failed to upload document')
+    const body = await response.text().catch(() => '')
+    throw new Error(body || 'Failed to upload document')
   }
 
   const data = await response.json()
@@ -153,7 +183,14 @@ export function connectWebSocket(
   onHeartbeat: (data: Heartbeat) => void,
   onRun: (data: Run) => void
 ) {
-  const wsUrl = GATEWAY_URL.replace('http', 'ws')
+  let wsUrl: string
+  if (GATEWAY_URL) {
+    wsUrl = GATEWAY_URL.replace(/^http/, 'ws')
+  } else {
+    // Dev mode — derive from current page origin so Vite proxy handles it
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    wsUrl = `${proto}//${window.location.host}`
+  }
   const ws = new WebSocket(`${wsUrl}/ws`)
 
   ws.onopen = () => console.log('WebSocket connected')

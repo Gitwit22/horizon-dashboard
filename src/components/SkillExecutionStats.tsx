@@ -1,16 +1,15 @@
 import { Zap } from "lucide-react";
-
-const skills = [
-  { name: "capital-sprint", runs: 5, status: "active" as const },
-  { name: "contact-research", runs: 3, status: "active" as const },
-  { name: "email-draft", runs: 0, status: "pending" as const },
-  { name: "memory-refresh", runs: 2, status: "active" as const },
-  { name: "portfolio-sync", runs: 1, status: "active" as const },
-];
-
-const maxRuns = Math.max(...skills.map((s) => s.runs), 1);
+import { useSkillStats } from "@/hooks/useHorizonData";
+import { LoadingState, EmptyState } from "@/components/DataStates";
 
 export function SkillExecutionStats() {
+  const { data: skills, loading } = useSkillStats();
+
+  if (loading) return <LoadingState label="Loading skills..." />;
+  if (!skills || skills.length === 0) return <EmptyState label="No skill data available." />;
+
+  const maxRuns = Math.max(...skills.map((s) => s.runs), 1);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">

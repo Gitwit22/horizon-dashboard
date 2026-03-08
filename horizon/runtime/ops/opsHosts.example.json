@@ -1,0 +1,6 @@
+{
+  "hq-lab": {
+    "baseUrl": "http://10.0.0.194:8787",
+    "secret": "SET_ME_FROM_SECRET_STORE"
+  }
+}

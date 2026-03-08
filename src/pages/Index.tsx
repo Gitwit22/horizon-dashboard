@@ -11,7 +11,8 @@ import { MemoryStatus } from "@/components/MemoryStatus";
 import { SubagentQueue } from "@/components/SubagentQueue";
 import { ChatPanel } from "@/components/ChatPanel";
 import { DocumentUploadPanel } from "@/components/DocumentUploadPanel";
-import { Run } from "@/data/mockRuns";
+import { ConnectionControl } from "@/components/ConnectionControl";
+import type { Run } from "@/types/horizon";
 
 const Index = () => {
   const [selectedRun, setSelectedRun] = useState<Run | null>(null);
@@ -35,6 +36,7 @@ const Index = () => {
 
           {activeTab === "overview" && (
             <>
+              <ConnectionControl />
               <ProjectStatusPanel />
               <div className="grid gap-6 lg:grid-cols-2">
                 <SkillExecutionStats />

@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite",
     "dev:electron": "electron .",
-    "dev:all": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && npm run dev:electron\"",
+    "dev:all": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && npm run dev:electron\"",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "build:electron": "npm run build && electron-builder",

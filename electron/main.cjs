@@ -12,7 +12,7 @@ function createWindow() {
     minHeight: 600,
     icon: path.join(__dirname, '../assets/icon.png'),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false
@@ -20,13 +20,13 @@ function createWindow() {
   })
 
   const startUrl = isDev
-    ? 'http://localhost:5173'
+    ? 'http://localhost:8080'
     : `file://${path.join(__dirname, '../dist/index.html')}`
 
   mainWindow.loadURL(startUrl)
 
   if (isDev) {
-    mainWindow.webDevTools.openDevTools()
+    mainWindow.webContents.openDevTools()
   }
 
   mainWindow.on('closed', () => {

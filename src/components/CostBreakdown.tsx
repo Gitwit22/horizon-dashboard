@@ -1,43 +1,14 @@
 import { Coins } from "lucide-react";
-
-const projects = [
-  {
-    name: "StreamLine",
-    total: 4.82,
-    breakdown: [
-      { provider: "Claude", cost: 4.12 },
-      { provider: "Ollama", cost: 0, label: "free" },
-      { provider: "Tools", cost: 0.70 },
-    ],
-  },
-  {
-    name: "MeJay",
-    total: 1.24,
-    breakdown: [
-      { provider: "Claude", cost: 1.24 },
-    ],
-  },
-  {
-    name: "WAMS",
-    total: 0.58,
-    breakdown: [
-      { provider: "Claude", cost: 0.43 },
-      { provider: "Ollama", cost: 0, label: "free" },
-      { provider: "Tools", cost: 0.15 },
-    ],
-  },
-  {
-    name: "Research",
-    total: 2.15,
-    breakdown: [
-      { provider: "Claude", cost: 2.15 },
-    ],
-  },
-];
-
-const maxCost = Math.max(...projects.map((p) => p.total));
+import { useCostBreakdown } from "@/hooks/useHorizonData";
+import { LoadingState, EmptyState } from "@/components/DataStates";
 
 export function CostBreakdown() {
+  const { data: projects, loading } = useCostBreakdown();
+
+  if (loading) return <LoadingState label="Loading costs..." />;
+  if (!projects || projects.length === 0) return <EmptyState label="No cost data available." />;
+
+  const maxCost = Math.max(...projects.map((p) => p.total), 0.01);
   const totalAll = projects.reduce((s, p) => s + p.total, 0);
 
   return (

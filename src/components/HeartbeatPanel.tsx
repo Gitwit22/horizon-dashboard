@@ -1,4 +1,5 @@
-import { heartbeatData } from "@/data/mockRuns";
+import { useHeartbeat } from "@/hooks/useHorizonData";
+import { LoadingState, EmptyState } from "@/components/DataStates";
 import { Activity, Clock, AlertTriangle, Zap, BarChart3, CheckCircle } from "lucide-react";
 
 function timeSince(isoString: string) {
@@ -25,7 +26,10 @@ function MetricCard({ icon: Icon, label, value, accent = false, warning = false 
 }
 
 export function HeartbeatPanel() {
-  const d = heartbeatData;
+  const { data: d, loading } = useHeartbeat();
+
+  if (loading || !d) return <LoadingState label="Loading heartbeat..." />;
+
   const lastEventAgo = timeSince(d.lastEventReceived);
   const lastSuccessAgo = timeSince(d.lastSuccessfulRun);
 

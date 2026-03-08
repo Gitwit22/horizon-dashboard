@@ -1,6 +1,6 @@
-import { Run, RunStep, StepType } from "@/data/mockRuns";
+import type { Run, RunStep, StepType } from "@/types/horizon";
 import { StatusBadge } from "./StatusBadge";
-import { X, ChevronDown, ChevronRight, Brain, Wrench, Sparkles, AlertTriangle } from "lucide-react";
+import { X, ChevronDown, ChevronRight, Brain, Wrench, Sparkles, AlertTriangle, Copy, Check } from "lucide-react";
 import { useState } from "react";
 
 const stepIcons: Record<StepType, any> = {
@@ -14,6 +14,21 @@ const stepColors: Record<StepType, string> = {
   tool_call: "text-success",
   skill_call: "text-warning",
 };
+
+/** Handles ISO strings AND pre-formatted times like "04:16 PM" */
+function formatTime(raw: string) {
+  if (!raw) return "—";
+  if (/^\d{1,2}:\d{2}\s*(AM|PM)$/i.test(raw)) return raw;
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+function formatDuration(ms: number | null) {
+  if (ms === null || ms === undefined) return "—";
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
+}
 
 function StepItem({ step, index }: { step: RunStep; index: number }) {
   const [expanded, setExpanded] = useState(false);
@@ -69,13 +84,32 @@ function StepItem({ step, index }: { step: RunStep; index: number }) {
   );
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <button onClick={handleCopy} className="p-1 rounded hover:bg-secondary/50 transition-colors" title="Copy run ID">
+      {copied ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+    </button>
+  );
+}
+
 export function RunDetailDrawer({ run, onClose }: { run: Run; onClose: () => void }) {
   return (
     <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-card border-l border-border shadow-2xl z-50 animate-slide-in flex flex-col">
+      {/* ---- Header ---- */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
         <div className="flex items-center gap-3">
-          <h2 className="font-mono text-sm font-bold text-foreground">{run.id}</h2>
           <StatusBadge status={run.status} />
+          <div className="flex items-center gap-1.5">
+            <h2 className="font-mono text-sm font-bold text-foreground truncate max-w-[260px]" title={run.id}>{run.id}</h2>
+            <CopyButton text={run.id} />
+          </div>
         </div>
         <button onClick={onClose} className="p-1.5 rounded-md hover:bg-secondary transition-colors">
           <X className="h-4 w-4 text-muted-foreground" />
@@ -83,35 +117,19 @@ export function RunDetailDrawer({ run, onClose }: { run: Run; onClose: () => voi
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-        {/* Meta */}
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Channel</p>
-            <p className="font-medium text-foreground">{run.channel}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">User ID</p>
-            <p className="font-mono text-foreground">{run.userId}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Agent / Lane</p>
-            <p className="text-foreground">{run.agent} <span className="text-muted-foreground">/ {run.lane}</span></p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Duration</p>
-            <p className="font-mono text-foreground">{run.durationMs ? `${(run.durationMs / 1000).toFixed(1)}s` : "In progress..."}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Tokens</p>
-            <p className="font-mono text-foreground">{run.tokensUsed.toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Cost</p>
-            <p className="font-mono text-primary">${run.cost.toFixed(4)}</p>
-          </div>
+        {/* ---- Meta grid ---- */}
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <MetaField label="Started" value={formatTime(run.startedAt)} mono />
+          <MetaField label="Duration" value={formatDuration(run.durationMs)} mono />
+          <MetaField label="Agent" value={run.agent} />
+          {run.lane && run.lane !== "general" && <MetaField label="Lane" value={run.lane} />}
+          {run.channel && run.channel !== "api" && <MetaField label="Channel" value={run.channel} />}
+          {run.userId && <MetaField label="User" value={run.userId} mono />}
+          <MetaField label="Tokens" value={run.tokensUsed > 0 ? run.tokensUsed.toLocaleString() : "—"} mono />
+          <MetaField label="Cost" value={run.cost > 0 ? `$${run.cost.toFixed(4)}` : "—"} highlight={run.cost > 0} mono />
         </div>
 
-        {/* Error */}
+        {/* ---- Error ---- */}
         {run.error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -122,21 +140,45 @@ export function RunDetailDrawer({ run, onClose }: { run: Run; onClose: () => voi
           </div>
         )}
 
-        {/* Steps */}
+        {/* ---- Steps ---- */}
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-            Step Timeline ({run.steps.length} steps)
+            Step Timeline {run.steps.length > 0 && `(${run.steps.length} steps)`}
           </h3>
-          <div className="space-y-2">
-            {run.steps.map((step, i) => (
-              <StepItem key={step.id} step={step} index={i} />
-            ))}
-            {run.steps.length === 0 && (
-              <p className="text-sm text-muted-foreground italic">No steps executed yet.</p>
-            )}
-          </div>
+          {run.steps.length > 0 ? (
+            <div className="space-y-2">
+              {run.steps.map((step, i) => (
+                <StepItem key={step.id} step={step} index={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border bg-secondary/20 px-4 py-6 text-center">
+              <p className="text-sm text-muted-foreground">Step-level detail is not available for this run.</p>
+              <p className="text-xs text-muted-foreground mt-1">The gateway does not expose a per-run steps endpoint yet.</p>
+            </div>
+          )}
         </div>
+
+        {/* ---- Raw JSON ---- */}
+        <details className="group">
+          <summary className="text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors">
+            Raw Data
+          </summary>
+          <pre className="mt-2 text-xs font-mono text-muted-foreground bg-background rounded-lg border border-border p-3 overflow-x-auto max-h-60">
+{JSON.stringify(run, null, 2)}
+          </pre>
+        </details>
       </div>
+    </div>
+  );
+}
+
+/* ---- Helper for meta fields ---- */
+function MetaField({ label, value, mono, highlight }: { label: string; value: string; mono?: boolean; highlight?: boolean }) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
+      <p className={`${mono ? "font-mono" : "font-medium"} ${highlight ? "text-primary" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }
