@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 /**
- * Tracks browser online/offline state via the Network Information API.
+ * Tracks browser online/offline state via the Navigator.onLine API.
  * Returns `true` when the browser reports connectivity, `false` otherwise.
  */
 export function useNetworkStatus(): boolean {

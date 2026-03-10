@@ -241,7 +241,7 @@ export function ChatPanel() {
                 ? "Listening… speak now"
                 : connectionStatus === "disconnected"
                   ? "Disconnected — messages will be sent when reconnected"
-                  : "Type a message or use 🎙️ voice (or ops.local/ops.remote)"
+                  : "Type a message or use voice input (or ops.local/ops.remote)"
             }
             className="flex-1 px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded focus:outline-none focus:border-orange-500 disabled:opacity-50"
           />
