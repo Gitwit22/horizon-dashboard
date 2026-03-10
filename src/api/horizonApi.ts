@@ -6,6 +6,8 @@ const GATEWAY_URL = getGatewayUrl();
 
 const MAX_UPLOAD_MB = Number(import.meta.env.VITE_MAX_UPLOAD_MB || 25);
 
+const DEFAULT_TIMEOUT_MS = 10_000;
+
 export interface Heartbeat {
   lastEvent: Date
   lastSuccess: Date
@@ -60,6 +62,7 @@ export interface UploadedDocument {
 export async function fetchHeartbeat(): Promise<Heartbeat> {
   const response = await fetch(`${GATEWAY_URL}/api/heartbeat`, {
     headers: getAuthHeaders(),
+    signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
   })
   if (!response.ok) throw new Error('Failed to fetch heartbeat')
   return await response.json()
@@ -70,6 +73,7 @@ export async function fetchRuns(): Promise<Run[]> {
   try {
     const response = await fetch(`${GATEWAY_URL}/api/runs`, {
       headers: getAuthHeaders(),
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
     })
     if (!response.ok) throw new Error('Failed to fetch runs')
     const data = await response.json()
@@ -85,6 +89,7 @@ export async function fetchProjectStatus(): Promise<ProjectStatus[]> {
   try {
     const response = await fetch(`${GATEWAY_URL}/api/projects`, {
       headers: getAuthHeaders(),
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
     })
     if (!response.ok) throw new Error('Failed to fetch projects')
     return await response.json()
@@ -99,6 +104,7 @@ export async function fetchSkillStats(): Promise<SkillExecution[]> {
   try {
     const response = await fetch(`${GATEWAY_URL}/api/skills`, {
       headers: getAuthHeaders(),
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
     })
     if (!response.ok) throw new Error('Failed to fetch skills')
     return await response.json()
@@ -113,6 +119,7 @@ export async function fetchCostBreakdown(): Promise<CostBreakdown[]> {
   try {
     const response = await fetch(`${GATEWAY_URL}/api/costs`, {
       headers: getAuthHeaders(),
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
     })
     if (!response.ok) throw new Error('Failed to fetch costs')
     return await response.json()
@@ -135,6 +142,7 @@ export async function fetchAlerts(): Promise<AlertRule[]> {
   try {
     const response = await fetch(`${GATEWAY_URL}/api/alerts`, {
       headers: getAuthHeaders(),
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
     })
     if (!response.ok) throw new Error('Failed to fetch alerts')
     return await response.json()

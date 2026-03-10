@@ -1,9 +1,46 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "@/context/ChatContext";
 import { ApprovalCard } from "@/components/ApprovalCard";
-import { Loader2 } from "lucide-react";
+import { Loader2, WifiOff } from "lucide-react";
 import { parseOpsCommand, runOpsCommand } from "@/api/opsApi";
 import { toast } from "@/hooks/use-toast";
+import { useVoiceInput } from "@/hooks/useVoiceInput";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { VoiceButton } from "@/components/VoiceButton";
+import type { ChatMessage } from "@/types/chat";
+
+/** Memoized chat bubble — only re-renders when the message object changes. */
+const ChatBubble = React.memo(function ChatBubble({ msg }: { msg: ChatMessage }) {
+  return (
+    <div className={`flex ${msg.direction === "out" ? "justify-end" : "justify-start"}`}>
+      <div
+        className={`max-w-xs px-4 py-2 rounded-lg ${
+          msg.direction === "out"
+            ? "bg-orange-500 text-white"
+            : "bg-slate-700 text-slate-100"
+        } ${msg.status === "sending" ? "opacity-70" : ""} ${
+          msg.status === "failed" ? "border border-red-500" : ""
+        }`}
+      >
+        <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+        <div className="flex items-center gap-1 mt-1">
+          <p className="text-xs opacity-70">
+            {new Date(msg.ts).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
+          {msg.status === "sending" && (
+            <Loader2 className="h-2.5 w-2.5 animate-spin opacity-70" />
+          )}
+          {msg.status === "failed" && (
+            <span className="text-xs text-red-300">Failed</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
 
 export function ChatPanel() {
   const {
@@ -25,6 +62,17 @@ export function ChatPanel() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const prevScrollHeight = useRef(0);
+  const online = useNetworkStatus();
+
+  // Voice input — transcription populates the text field
+  const voice = useVoiceInput({
+    onResult: (transcript) => {
+      setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+    },
+    onError: (err) => {
+      toast({ title: "Voice input error", description: err });
+    },
+  });
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -120,6 +168,14 @@ export function ChatPanel() {
         </button>
       </div>
 
+      {/* Offline banner */}
+      {!online && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-yellow-900/60 text-yellow-200 text-xs">
+          <WifiOff className="h-3.5 w-3.5 shrink-0" />
+          You are offline — messages will be sent when connectivity is restored.
+        </div>
+      )}
+
       {/* Messages */}
       <div
         ref={scrollContainerRef}
@@ -144,36 +200,7 @@ export function ChatPanel() {
           </div>
         ) : (
           messages.map((msg) => (
-            <div
-              key={msg.id || msg.clientMessageId}
-              className={`flex ${msg.direction === "out" ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-xs px-4 py-2 rounded-lg ${
-                  msg.direction === "out"
-                    ? "bg-orange-500 text-white"
-                    : "bg-slate-700 text-slate-100"
-                } ${msg.status === "sending" ? "opacity-70" : ""} ${
-                  msg.status === "failed" ? "border border-red-500" : ""
-                }`}
-              >
-                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                <div className="flex items-center gap-1 mt-1">
-                  <p className="text-xs opacity-70">
-                    {new Date(msg.ts).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                  {msg.status === "sending" && (
-                    <Loader2 className="h-2.5 w-2.5 animate-spin opacity-70" />
-                  )}
-                  {msg.status === "failed" && (
-                    <span className="text-xs text-red-300">Failed</span>
-                  )}
-                </div>
-              </div>
-            </div>
+            <ChatBubble key={msg.id || msg.clientMessageId} msg={msg} />
           ))
         )}
 
@@ -196,7 +223,13 @@ export function ChatPanel() {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSend} className="p-4 border-t border-slate-700">
+      <form onSubmit={handleSend} className="p-4 border-t border-slate-700 space-y-2">
+        {/* Interim voice transcript preview */}
+        {voice.interim && (
+          <p className="text-xs text-slate-400 italic truncate">
+            🎙️ {voice.interim}
+          </p>
+        )}
         <div className="flex gap-2">
           <input
             type="text"
@@ -204,11 +237,19 @@ export function ChatPanel() {
             onChange={(e) => setInput(e.target.value)}
             disabled={isSending}
             placeholder={
-              connectionStatus === "disconnected"
-                ? "Disconnected — messages will be sent when reconnected"
-                : "Type a message... (or ops.local/ops.remote commands)"
+              voice.listening
+                ? "Listening… speak now"
+                : connectionStatus === "disconnected"
+                  ? "Disconnected — messages will be sent when reconnected"
+                  : "Type a message or use 🎙️ voice (or ops.local/ops.remote)"
             }
             className="flex-1 px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded focus:outline-none focus:border-orange-500 disabled:opacity-50"
+          />
+          <VoiceButton
+            listening={voice.listening}
+            supported={voice.supported}
+            onClick={voice.toggle}
+            disabled={isSending}
           />
           <button
             type="submit"
