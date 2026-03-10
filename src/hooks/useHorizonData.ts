@@ -62,10 +62,33 @@ function usePolling<T>(
   useEffect(() => {
     mountedRef.current = true;
     load();
-    const id = setInterval(load, intervalMs);
+
+    let id: ReturnType<typeof setInterval> | null = null;
+
+    const start = () => {
+      if (!id) id = setInterval(load, intervalMs);
+    };
+    const stop = () => {
+      if (id) { clearInterval(id); id = null; }
+    };
+
+    // Pause polling when tab is hidden to save bandwidth/CPU
+    const onVisibility = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        load(); // Refresh immediately when tab becomes visible
+        start();
+      }
+    };
+
+    start();
+    document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
       mountedRef.current = false;
-      clearInterval(id);
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [load, intervalMs]);
 
